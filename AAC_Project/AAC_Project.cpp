@@ -1,20 +1,92 @@
-// AAC_Project.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <sstream>
 
-int main()
-{
-    std::cout << "Hello World!\n";
+using namespace std;
+
+struct Graph {
+    int vertices;
+    vector<vector<int>> adjacencyMatrix;
+    string additionalInfo;
+};
+
+vector<Graph> parseGraphs(const string& filename) {
+    ifstream inputFile(filename);
+    vector<Graph> graphs;
+
+    if (!inputFile.is_open()) {
+        cerr << "Error: Could not open file." << endl;
+        return graphs;
+    }
+
+    string numberOfGraphs;
+    getline(inputFile, numberOfGraphs);
+
+    for (int i = 0; i < stoi(numberOfGraphs); ++i) {
+        Graph graph;
+        string line;
+
+        // number of vertices
+        getline(inputFile, line);
+        while(line == "")
+            getline(inputFile, line);
+        graph.vertices = stoi(line);
+
+        // adjacency matrix
+        for (int j = 0; j < graph.vertices; ++j) {
+            getline(inputFile, line);
+            istringstream rowStream(line);   //Input stream class to operate on strings. Objects of this class use a string buffer that contains a sequence of characters. This sequence of characters can be accessed directly as a string object
+            vector<int> row;
+            int value;
+
+            while (rowStream >> value) {
+                row.push_back(value);
+            }
+
+            graph.adjacencyMatrix.push_back(row);
+        }
+
+        // additional information (if any)
+        if (getline(inputFile, line) && !line.empty()) {
+            graph.additionalInfo = line;
+        }
+        graphs.push_back(graph);
+    }
+
+    inputFile.close();
+    return graphs;
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+void printGraph(const Graph& graph) {
+    cout << "Number of vertices: " << graph.vertices << endl;
+    cout << "Adjacency Matrix:" << endl;
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+    for (const auto& row : graph.adjacencyMatrix) {
+        for (int value : row) {
+            cout << value << " ";
+        }
+        cout << endl;
+    }
+
+    if (!graph.additionalInfo.empty()) {
+        cout << "Additional Info: " << graph.additionalInfo << endl;
+    }
+}
+
+int main() {
+    string filename;
+    cout << "Data file path: ";
+    cin >> filename;
+    
+    vector<Graph> graphs = parseGraphs(filename);
+    cout << "Parsed " << graphs.size() << " graphs." << endl;
+
+    for (size_t i = 0; i < graphs.size(); ++i) {
+        cout << "\nGraph " << i + 1 << ":" << endl;
+        printGraph(graphs[i]);
+    }
+
+    return 0;
+}
