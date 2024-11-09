@@ -1,3 +1,88 @@
 #ignoring bellow folders
-.log/
+# Ignore Visual Studio temporary files, build results, and
+# user-specific files.
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## User-specific VS Code settings
+.vscode/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+ipch/
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tmp
+*.log
+*.vspscc
+*.vssscc
+
+## Visual Studio 2022
 .vs/
+.vscode/
+*.vcxproj.user
+*.vcxproj.filters
+*.vcxproj.*
+*.props
+
+## CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+CMakeLists.txt.user
+build/
+install_manifest.txt
+_compile_commands.json
+CTestTestfile.cmake
+CMakeTmp/
+cmake-build-*/
+
+## Other backup and temporary files
+*~
+*.bak
+*.swp
+*.dir
+Thumbs.db
+.DS_Store
+
+## Ignore C++ specific files
+*.dll
+*.lib
+*.exp
+*.idb
+*.ipdb
+*.tlog
+*.log
+*.sbr
+*.sdf
+
+# Additional directories to ignore
+output/
+build/
+
