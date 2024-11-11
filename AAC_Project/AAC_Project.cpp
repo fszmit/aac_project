@@ -3,8 +3,13 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <queue>
+#include <algorithm>
 
 using namespace std;
+
+typedef unsigned long ul;
+typedef unsigned long long ull;
 
 struct Graph {
     int vertices;
@@ -82,8 +87,23 @@ Graph InitGraph(int size) {
     return g;
 }
 
-Graph SubGraph(Graph * g, std::vector<int> mask, int * neighbours = NULL) {
+Graph CloneGraph(const Graph * g) {
+    Graph res = InitGraph(g->vertices);
+    for (int i = 0; i < g->vertices; i++)
+    {
+        for (int j = 0; j < g->vertices; j++)
+        {
+            res.adjacencyMatrix[i][j] = g->adjacencyMatrix[i][j];
+        }
+    }
+    res.additionalInfo = g->additionalInfo;
+    return res;
+}
 
+Graph SubGraph(Graph * g, std::vector<int> mask, int * neighbours = NULL) {
+    if (mask.size() == 0) {
+        return CloneGraph(g);
+    }
     int sub_size = g->vertices - mask.size();
     Graph s = InitGraph(sub_size);
 
@@ -136,15 +156,39 @@ std::vector<std::vector<int>> MatMul(std::vector<std::vector<int>> mat1, std::ve
     // assumes the sizes are equal
     std::vector<std::vector<int>> res = std::vector<std::vector<int> >(mat1.size(), std::vector<int>(mat1.size(), 0));
 
-    for (int i = 0; i < mat1.size(); i++)
+    for (ul i = 0; i < mat1.size(); i++)
     {
-        for (int j = 0; j < mat1.size(); j++)
+        for (ul j = 0; j < mat1.size(); j++)
         {
-            for (int k = 0; k < mat1.size(); k++)
+            for (ul k = 0; k < mat1.size(); k++)
             {
                 res[i][j] += mat1[i][k] * mat2[k][j];
             }
         }
+    }
+    return res;
+}
+
+std::vector<std::vector<int>> MatPow(std::vector<std::vector<int>> mat, int exp){
+    std::vector<std::vector<int>> res;
+    bool set = false;
+    std::vector<std::vector<int>> curr = mat;
+    int i = 1;
+    while (exp != 0)
+    {
+        if (exp % 2 == 1){
+            //cout << "at " << i;
+            if (!set){
+                res = curr;
+                set = true;
+            }
+            else {
+                res = MatMul(res, curr);
+            }
+        }
+        exp /= 2;
+        i*=2;
+        curr = MatMul(curr, curr);
     }
     return res;
 }
@@ -162,11 +206,120 @@ int binom(int n, int k) {
     return p;
 }
 
+bool isWeaklyConnected(const std::vector<std::vector<int>> * mat) {
+    std::vector<bool> conn (mat->size(), false);
+    conn[0] = true;
+    std::queue<int> q;
+    int connected = 1;
+    q.push(0);
+
+    while (!q.empty())
+    {
+        int c_vert = q.front(); q.pop();
+        for (int i = 0; i < (int)mat->size(); i++)
+        {
+            if (c_vert == i || conn[i] == true) {continue;}
+            if ((*mat)[c_vert][i] >= 1 ||(* mat)[i][c_vert] >= 1) {
+                q.push(i);
+                conn[i] = true;
+                connected++;
+                if (connected == (int)mat->size())
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+
+}
+
+std::vector<std::vector<int>> FlattenMatrix(std::vector<std::vector<int>> mat) {
+    std::vector<std::vector<int>> res (mat.size(), std::vector<int>(mat.size(), 0));
+    for (ul i = 0; i < mat.size(); i++)
+    {
+        for (ul j = 0; j < mat.size(); j++)
+        {
+            res[i][j] = max(mat[i][j], 1);
+        }
+    }
+    return res;
+}
+
+std::vector<std::vector<int>> comb(int n, int k) {
+    std::vector<std::vector<int>> res;
+
+    std::string bitmask(k, 1);
+    bitmask.resize(n, 0);
+
+    do
+    {
+        for (int i = 0; i < n; i++)
+        {
+            std::vector<int> sub;
+            if (bitmask[i])
+            {
+                sub.push_back(i);
+            }
+            res.push_back(sub);
+        }
+        
+    } while (std::prev_permutation(bitmask.begin(), bitmask.end()));
+    return res;
+}
+
+int MatTrace(std::vector<std::vector<int>> mat) {
+    int res = 0;
+    for (ul i = 0; i < mat.size(); i++)
+    {
+        res += mat[i][i];
+    }
+    return res;
+}
+
 int MaxCycle(Graph * g, int * no_cycles = NULL) {
     // based on https://arxiv.org/pdf/1612.05531
-    // NOTE:: this returnx the number of **directed** cycles. so a singular cycle in an undirected graph will count for two
+    // NOTE:: this returns the number of **directed** cycles. so a singular cycle in an undirected graph will count for two
 
+    Graph flat;
+    flat.vertices = g->vertices;
 
+    flat.adjacencyMatrix = FlattenMatrix(g->adjacencyMatrix);
+
+    flat.additionalInfo = g->additionalInfo;
+
+    for (int i = flat.vertices; i >= 1; i--)
+    {
+        
+        int gamma = 0;
+        for (int j = flat.vertices; j >=1 ; j--)
+        {
+            std::vector<std::vector<int>> combs = comb(flat.vertices, j);
+            for (int k = 0; k < (int)combs.size(); k++)
+            {
+                int sub_gamma = 0;
+                int neigh;
+                Graph sub = SubGraph(&flat, combs[k], &neigh);
+                if (! isWeaklyConnected(&sub.adjacencyMatrix)) {
+                    continue;
+                }
+                sub_gamma = binom(neigh, i - sub.vertices) * ( sub.vertices % 2 == 1 ? -1 : 1 ) * MatTrace( MatPow(sub.adjacencyMatrix, i) );
+                gamma += sub_gamma;
+            }
+            
+        }
+        gamma /= i;
+        gamma *= (i % 2 == 1 ? -1 : 1);
+        if (gamma != 0 )
+        {
+            if (no_cycles != NULL){
+                *no_cycles = gamma;
+            }
+            return i;
+        }   
+    }   
+    *no_cycles = 0;
+    return 0;
 }
 
 int main() {
@@ -182,12 +335,22 @@ int main() {
         printGraph(graphs[i]);
         cout << "\nSubgraph:\n";
         int n = 0;
-        Graph sub = SubGraph(&graphs[0], {3}, &n);
+        Graph sub = SubGraph(&graphs[0], {2}, &n);
         printGraph(sub);
         cout << "neighbours: " << n << '\n';
+
+        cout << "power of 5:\n";
+        Graph p;
+        p.vertices = graphs[i].vertices;
+        p.adjacencyMatrix = MatPow(graphs[i].adjacencyMatrix, 5);
+        printGraph(p);
+
+        int no_cycles = 0;
+        cout << "Max Cycle size: " << MaxCycle(&graphs[i], &no_cycles) << '\n';
+        cout << "No Max Cycles: " << no_cycles << '\n';
+
+        cout << "\n\n";
     }
-
-
 
 
     return 0;
