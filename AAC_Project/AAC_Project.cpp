@@ -104,6 +104,14 @@ Graph SubGraph(Graph * g, std::vector<int> mask, int * neighbours = NULL) {
     if (mask.size() == 0) {
         return CloneGraph(g);
     }
+    if (mask.size() == g->vertices) {
+        if (neighbours != NULL) {
+            *neighbours = 0;
+        }
+        Graph r;
+        r.vertices = 0;
+        return r;
+    }
     int sub_size = g->vertices - mask.size();
     Graph s = InitGraph(sub_size);
 
@@ -184,6 +192,7 @@ std::vector<std::vector<int>> MatPow(std::vector<std::vector<int>> mat, int exp)
             }
             else {
                 res = MatMul(res, curr);
+                
             }
         }
         exp /= 2;
@@ -207,6 +216,8 @@ int binom(int n, int k) {
 }
 
 bool isWeaklyConnected(const std::vector<std::vector<int>> * mat) {
+    if (mat == NULL || mat->size() == 0) {return false;}
+    if (mat->size() == 1) {return true;}
     std::vector<bool> conn (mat->size(), false);
     conn[0] = true;
     std::queue<int> q;
@@ -240,7 +251,7 @@ std::vector<std::vector<int>> FlattenMatrix(std::vector<std::vector<int>> mat) {
     {
         for (ul j = 0; j < mat.size(); j++)
         {
-            res[i][j] = max(mat[i][j], 1);
+            res[i][j] = min(mat[i][j], 1);
         }
     }
     return res;
@@ -254,15 +265,15 @@ std::vector<std::vector<int>> comb(int n, int k) {
 
     do
     {
+        std::vector<int> sub;
         for (int i = 0; i < n; i++)
         {
-            std::vector<int> sub;
             if (bitmask[i])
             {
                 sub.push_back(i);
             }
-            res.push_back(sub);
         }
+        res.push_back(sub);
         
     } while (std::prev_permutation(bitmask.begin(), bitmask.end()));
     return res;
@@ -292,7 +303,7 @@ int MaxCycle(Graph * g, int * no_cycles = NULL) {
     {
         
         int gamma = 0;
-        for (int j = flat.vertices; j >=1 ; j--)
+        for (int j = flat.vertices; j >=0 ; j--)
         {
             std::vector<std::vector<int>> combs = comb(flat.vertices, j);
             for (int k = 0; k < (int)combs.size(); k++)
@@ -324,6 +335,7 @@ int MaxCycle(Graph * g, int * no_cycles = NULL) {
 
 int main() {
     string filename;
+    cout << system("pwd");
     cout << "Data file path: ";
     cin >> filename;
     
