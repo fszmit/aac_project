@@ -2,6 +2,8 @@
 
 #include <queue>
 #include <iostream>
+#include <cmath>
+#include <algorithm>
 
 bool isWeaklyConnected(const std::vector<std::vector<int>> * mat) {
     if (mat == NULL || mat->size() == 0) {return false;}
@@ -105,6 +107,7 @@ Graph SubGraph(const Graph * const g, std::vector<int> mask, int * neighbours = 
 
     std::vector<int> n = std::vector<int>(mask.size(), 0);
 
+
     int si = 0;
     for (int i = 0; i < g->vertices; i++) // rows
     {
@@ -148,7 +151,7 @@ Graph SubGraph(const Graph * const g, std::vector<int> mask, int * neighbours = 
     return s;
 }
 
-int MaxCycle(Graph * g, int * no_cycles = NULL) {
+int MaxCycle(const Graph * const g, int * no_cycles = NULL) {
     // based on https://arxiv.org/pdf/1612.05531
     // NOTE:: this returns the number of **directed** cycles. so a singular cycle in an undirected graph will count for two
 
@@ -159,7 +162,7 @@ int MaxCycle(Graph * g, int * no_cycles = NULL) {
 
     flat.additionalInfo = g->additionalInfo;
 
-    for (int i = flat.vertices; i >= 1; i--)
+    for (int i = flat.vertices; i >= 3; i--)
     {   
         int gamma = 0;
         for (int j = flat.vertices; j >=0 ; j--)
@@ -191,4 +194,231 @@ int MaxCycle(Graph * g, int * no_cycles = NULL) {
     }   
     *no_cycles = 0;
     return 0;
+}
+
+Graph PruneGraph(const Graph * const g) {
+    bool removed = true;
+    Graph sub = CloneGraph(g);
+
+    while (removed && sub.vertices > 0)
+    {
+        removed = false;
+        std::vector<size_t> conn(sub.vertices, 0);
+        for (int i = 0; i < sub.vertices; i++)
+        {
+            for (int j = 0; j < sub.vertices; j++)
+            {
+                if (i != j && sub.adjacencyMatrix.at(i).at(j) >= 1)
+                {
+                    conn[i] |= 1;
+                    conn[j] |= 2;
+                }              
+            }
+        }
+        std::vector<int> mask;
+
+        for (size_t i = 0; i < conn.size(); i++)
+        {
+            if (conn[i] != 3) {
+                mask.push_back(i);
+                removed = true;
+            }
+        }
+        if (!removed) {
+            break;
+        }
+        int neigh = 0;
+        Graph tmp = SubGraph(&sub, mask, &neigh);
+        sub = tmp;
+    }
+    return sub;
+}
+
+void KosarajuVisit(const Graph * const g, const int vert, std::vector<int> * const vert_list, std::vector<bool> * const visited) {
+    if (visited->at(vert)) {
+        return;
+    }
+    visited->at(vert) = true;
+    for (int i = 0; i < g->vertices; i++)
+    {
+        if (i != vert && g->adjacencyMatrix[vert][i] >= 1) {
+            KosarajuVisit(g, i, vert_list, visited);
+        }
+    }
+    vert_list->push_back(vert);
+    return;
+}
+
+void KosarajuAssign(const Graph * const g, const int vert, const int root, std::vector<int> * const roots, std::vector<int> * const neg_mask) {
+    if ( roots->at(vert) != -1 ) {
+        return;
+    }
+    roots->at(vert) = root;
+    neg_mask->push_back(vert);
+    for (int i = 0; i < g->vertices; i++)
+    {
+        if (i != vert && g->adjacencyMatrix[i][vert] >= 1)
+        {
+            KosarajuAssign(g, i, root, roots, neg_mask);
+        }
+    }
+    return;
+}
+
+std::vector<int> InvertMask(const std::vector<int> * const mask, const int no_verts){
+    std::vector<int> res_mask;
+    int point = 0;
+    for (int i = 0; i < no_verts; i++)
+    {
+        if ( point < (int)mask->size() && i == mask->at(point) ) {
+            point++;
+            continue;
+        }
+        res_mask.push_back(i);
+    }
+    return res_mask;
+}
+
+void APXLongestSimpleCycleTraversal(const Graph * const g, int vertex, std::vector<int> * const col, std::vector<int> * const pred) {
+    col->at(vertex) = 1;
+    for (int i = 0; i < g->vertices; i++)
+    {
+        if (i == vertex || g->adjacencyMatrix[vertex][i] == 0)
+        {
+            continue;
+        }
+        if (col->at(i)==0)
+        {
+            pred->at(vertex);
+            APXLongestSimpleCycleTraversal(g, i, col, pred);
+        }
+    }
+}
+
+int APXLongestSimpleCycle(const Graph * const g, int max_vert) {
+    std::vector<int> col(g->vertices, 0);
+    std::vector<int> pred(g->vertices, -1);
+
+    for (int i = 0; i < g->vertices; i++)
+    {
+        if (max_vert == i || g->adjacencyMatrix[max_vert][i] == 0){
+            continue;
+        }
+        if (col[i] == 0){
+            APXLongestSimpleCycleTraversal(g, i, &col, &pred);
+        }
+    }
+
+    int depth = 1;
+    int prev = pred[max_vert];
+    while (prev != max_vert)
+    {
+        prev = pred[prev];
+        depth ++;
+    }
+    
+    return depth + 1;
+}
+
+int MaxOutDegree(const Graph * const g, double * const avg_degree){
+    int max_out = -1;
+    int v = -1;
+    int deg_total = 0;
+    for (int i = 0; i < g->vertices; i++)
+    {
+        int sum = 0;
+        for (int j = 0; j < g->vertices; j++)
+        {
+            sum += g->adjacencyMatrix[i][j] >= 1 ? 1 : 0;
+        }
+        deg_total += sum;
+        if (sum > max_out)
+        {
+            max_out = sum;
+            v = i;
+        }
+    }
+    if (avg_degree != NULL)
+    {
+        *avg_degree = ((double)deg_total) / ((double)g->vertices);
+    }
+    return v;
+}
+
+int APXMaxCycle(const Graph * const g, int * no_cycles = NULL){
+
+    Graph sub = PruneGraph(g); // O(V^3)
+
+    if (sub.vertices == 0) { // acyclic graph
+        if (no_cycles != NULL) {
+            *no_cycles = 0;
+        }
+        return 0;
+    }
+
+    // we find strongly connected components, as a cycle will ever cross a bridge 
+    // Kosaraju's algorithm -> O(V + E)
+
+    std::vector<int> vert_stack;
+    std::vector<bool> vsited(sub.vertices, false);
+
+    for (int i = 0; i < sub.vertices; i++)
+    {
+        KosarajuVisit(&sub, i, &vert_stack, &vsited);
+    }
+    std::reverse(vert_stack.begin(), vert_stack.end());
+
+    std::vector<int> roots(sub.vertices, -1);
+    std::vector<std::vector<int> > components;
+
+    for (int i = 0; i < (int)vert_stack.size(); i++)
+    {
+        std::vector<int> neg_mask;
+        KosarajuAssign(&sub, i, i, &roots, &neg_mask);
+        if (neg_mask.size() != 0){
+            components.push_back(neg_mask);
+        }
+    }
+    
+    std::sort(components.begin(), components.end(), [](std::vector<int> &a, std::vector<int> &b) -> bool { return a.size() >= b.size() ? true : false; } );
+
+    // std::cout << "components:\n";    
+    // for (int i = 0; i < (int)components.size(); i++)
+    // {
+    //     for (int j = 0; j < (int)components[i].size(); j++)
+    //     {
+    //         std::cout << (int)components[i][j] << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
+
+    int max_cycle = 0;
+    int cycle_count = 0;
+
+    for (int i = 0; i < (int)components.size(); i++)
+    {
+        std::sort(components[i].begin(), components[i].end());
+        std::vector<int> mask = InvertMask(&(components[i]), sub.vertices);
+        Graph comp = SubGraph(&sub, mask, NULL);
+        double avg_degree = 0;
+        int max = MaxOutDegree(&comp, &avg_degree);
+
+        // Kumar, Parveen & Gupta, Nitin. (2014). A Heuristic Algorithm for Longest Simple Cycle Problem. 
+        int max_cycle_len = APXLongestSimpleCycle(g, max);
+        if (max_cycle > max_cycle_len) { continue; }
+        if (max_cycle < max_cycle_len) {
+            max_cycle = max_cycle_len;
+            cycle_count = 0;
+        }
+        cycle_count += (int)std::lround( ((double)binom(comp.vertices, max_cycle)) * std::tgamma(avg_degree) );
+
+    }
+    
+    if (no_cycles != NULL) {
+        *no_cycles = cycle_count;
+    }
+
+    //estimation w/ the gamma funciton
+    return max_cycle;
+
 }

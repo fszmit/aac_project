@@ -24,12 +24,15 @@ int main() {
         cout << "====\n";
         cout << "\nGraph " << i + 1 << ":" << endl;
         printGraph(graphs[i]);
-        cout << "\nSubgraph:\n";
-
 
         int no_cycles = 0;
         cout << "Max Cycle size: " << MaxCycle(&(graphs[i]), &no_cycles) << '\n';
         cout << "No Max Cycles: " << no_cycles << '\n';
+
+        int apx_count = 0;
+        int apx_max = APXMaxCycle(&(graphs[i]), &apx_count);
+
+        std::cout << "APX:\n" << apx_max << " -- " << apx_count << "\n";
 
         cout << "====";
         cout << "\n\n";
