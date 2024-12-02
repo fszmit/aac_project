@@ -1,8 +1,10 @@
-#include <iostream>
 #include <fstream>
-#include <vector>
-#include <string>
+#include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
+
+#include "hamiltonian_completion/approximation.h"
 
 using namespace std;
 
@@ -12,7 +14,7 @@ struct Graph {
     string additionalInfo;
 };
 
-vector<Graph> parseGraphs(const string& filename) {
+vector<Graph> parseGraphs(const string &filename) {
     ifstream inputFile(filename);
     vector<Graph> graphs;
 
@@ -30,14 +32,17 @@ vector<Graph> parseGraphs(const string& filename) {
 
         // number of vertices
         getline(inputFile, line);
-        while(line == "")
-            getline(inputFile, line);
+        while (line == "") getline(inputFile, line);
         graph.vertices = stoi(line);
 
         // adjacency matrix
         for (int j = 0; j < graph.vertices; ++j) {
             getline(inputFile, line);
-            istringstream rowStream(line);   //Input stream class to operate on strings. Objects of this class use a string buffer that contains a sequence of characters. This sequence of characters can be accessed directly as a string object
+            // Input stream class to operate on strings. Objects of this
+            // class use a string buffer that contains a sequence of
+            // characters. This sequence of characters can be accessed
+            // directly as a string object
+            istringstream rowStream(line);
             vector<int> row;
             int value;
 
@@ -59,11 +64,11 @@ vector<Graph> parseGraphs(const string& filename) {
     return graphs;
 }
 
-void printGraph(const Graph& graph) {
+void printGraph(const Graph &graph) {
     cout << "Number of vertices: " << graph.vertices << endl;
     cout << "Adjacency Matrix:" << endl;
 
-    for (const auto& row : graph.adjacencyMatrix) {
+    for (const auto &row : graph.adjacencyMatrix) {
         for (int value : row) {
             cout << value << " ";
         }
@@ -79,13 +84,15 @@ int main() {
     string filename;
     cout << "Data file path: ";
     cin >> filename;
-    
+
     vector<Graph> graphs = parseGraphs(filename);
     cout << "Parsed " << graphs.size() << " graphs." << endl;
 
     for (size_t i = 0; i < graphs.size(); ++i) {
         cout << "\nGraph " << i + 1 << ":" << endl;
         printGraph(graphs[i]);
+
+        print_weighted_graph(transform_to_complete_weighted_graph(graphs[i].adjacencyMatrix));
     }
 
     return 0;
