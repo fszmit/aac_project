@@ -151,7 +151,7 @@ Graph SubGraph(const Graph * const g, std::vector<int> mask, int * neighbours = 
     return s;
 }
 
-int MaxCycle(const Graph * const g, int * no_cycles = NULL) {
+int MaxCycle(const Graph * const g, unsigned long long * no_cycles = NULL) {
     // based on https://arxiv.org/pdf/1612.05531
     // NOTE:: this returns the number of **directed** cycles. so a singular cycle in an undirected graph will count for two
 
@@ -164,13 +164,13 @@ int MaxCycle(const Graph * const g, int * no_cycles = NULL) {
 
     for (int i = flat.vertices; i >= 3; i--)
     {   
-        int gamma = 0;
+        long long gamma = 0;
         for (int j = flat.vertices; j >=0 ; j--)
         {
             std::vector<std::vector<int>> combs = comb(flat.vertices, j);
-            for (int k = 0; k < (int)combs.size(); k++)
+            for (unsigned long long k = 0; k < combs.size(); k++)
             {
-                int sub_gamma = 0;
+                long long sub_gamma = 0;
                 int neigh = 0;
                 std::vector<int> mask = combs[k];
                 Graph sub = SubGraph(&flat, mask, &neigh);
@@ -293,7 +293,7 @@ void APXLongestSimpleCycleTraversal(const Graph * const g, int vertex, std::vect
         }
         if (col->at(i)==0)
         {
-            pred->at(vertex);
+            pred->at(vertex) = i;
             APXLongestSimpleCycleTraversal(g, i, col, pred);
         }
     }
@@ -302,6 +302,8 @@ void APXLongestSimpleCycleTraversal(const Graph * const g, int vertex, std::vect
 int APXLongestSimpleCycle(const Graph * const g, int max_vert) {
     std::vector<int> col(g->vertices, 0);
     std::vector<int> pred(g->vertices, -1);
+
+
 
     for (int i = 0; i < g->vertices; i++)
     {
@@ -315,9 +317,12 @@ int APXLongestSimpleCycle(const Graph * const g, int max_vert) {
 
     int depth = 1;
     int prev = pred[max_vert];
-    while (prev != max_vert)
+    if (prev == -1){
+        return 0;
+    }
+    while (prev != max_vert && prev != -1)
     {
-        prev = pred[prev];
+        prev = pred.at(prev);
         depth ++;
     }
     
@@ -349,9 +354,11 @@ int MaxOutDegree(const Graph * const g, double * const avg_degree){
     return v;
 }
 
-int APXMaxCycle(const Graph * const g, int * no_cycles = NULL){
+int APXMaxCycle(const Graph * const g, unsigned long long * no_cycles = NULL){
 
     Graph sub = PruneGraph(g); // O(V^3)
+    
+    std::cout << sub.vertices << '\n';
 
     if (sub.vertices == 0) { // acyclic graph
         if (no_cycles != NULL) {
@@ -393,11 +400,9 @@ int APXMaxCycle(const Graph * const g, int * no_cycles = NULL){
     //     {
     //         std::cout << (int)components[i][j] << " ";
     //     }
-    //     std::cout << "\n";
-    // }
-
+    //   
     int max_cycle = 0;
-    int cycle_count = 0;
+    unsigned long long cycle_count = 0;
 
     for (int i = 0; i < (int)components.size(); i++)
     {
@@ -414,7 +419,7 @@ int APXMaxCycle(const Graph * const g, int * no_cycles = NULL){
             max_cycle = max_cycle_len;
             cycle_count = 0;
         }
-        cycle_count += (int)std::lround( ((double)binom(comp.vertices, max_cycle)) * std::tgamma(avg_degree) );
+        cycle_count += (int)std::lround( ((double)binom(comp.vertices, max_cycle)) * std::tgamma(avg_degree ) * ( (double)max_cycle / (double)comp.vertices )) ;
 
     }
     

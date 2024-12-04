@@ -96,6 +96,10 @@ std::vector<std::vector<int>> FlattenMatrix(std::vector<std::vector<int>> mat) {
     {
         for (ul j = 0; j < mat.size(); j++)
         {
+            if( j == i){
+                res[i][j] = 0;
+                continue;
+            }
             res[i][j] = min(mat[i][j], 1);
         }
     }
