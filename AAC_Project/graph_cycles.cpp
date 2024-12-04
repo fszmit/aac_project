@@ -204,6 +204,7 @@ Graph PruneGraph(const Graph * const g) {
     {
         removed = false;
         std::vector<size_t> conn(sub.vertices, 0);
+        std::vector<size_t> no_neigh(sub.vertices, 0);
         for (int i = 0; i < sub.vertices; i++)
         {
             for (int j = 0; j < sub.vertices; j++)
@@ -212,14 +213,17 @@ Graph PruneGraph(const Graph * const g) {
                 {
                     conn[i] |= 1;
                     conn[j] |= 2;
-                }              
+                }
+                if (i != j && (sub.adjacencyMatrix.at(j).at(i) >=1 || (conn[i] & 1) == 1 )) {
+                    no_neigh[i]++;
+                }
             }
         }
         std::vector<int> mask;
 
         for (size_t i = 0; i < conn.size(); i++)
         {
-            if (conn[i] != 3) {
+            if (conn[i] != 3 || no_neigh[i] <= (size_t)1) {
                 mask.push_back(i);
                 removed = true;
             }
