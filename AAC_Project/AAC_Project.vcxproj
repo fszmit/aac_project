@@ -128,6 +128,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AAC_Project.cpp" />
+    <ClCompile Include="hamiltonian_completion\approximation.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="hamiltonian_completion\approximation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
