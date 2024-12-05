@@ -35,8 +35,8 @@ bool isWeaklyConnected(const std::vector<std::vector<int>> * mat) {
 
 }
 
-int MatTrace(std::vector<std::vector<int>> mat) {
-    int res = 0;
+long long MatTrace(std::vector<std::vector<long long>> mat) {
+    long long res = 0;
     for (ul i = 0; i < mat.size(); i++)
     {
         res += mat[i][i];
@@ -44,9 +44,9 @@ int MatTrace(std::vector<std::vector<int>> mat) {
     return res;
 }
 
-std::vector<std::vector<int>> MatMul(std::vector<std::vector<int>> mat1, std::vector<std::vector<int>> mat2) {
+std::vector<std::vector<long long>> MatMul(std::vector<std::vector<long long>> mat1, std::vector<std::vector<long long>> mat2) {
     // assumes the sizes are equal
-    std::vector<std::vector<int>> res = std::vector<std::vector<int> >(mat1.size(), std::vector<int>(mat1.size(), 0));
+    std::vector<std::vector<long long>> res = std::vector<std::vector<long long> >(mat1.size(), std::vector<long long>(mat1.size(), 0));
 
     for (ul i = 0; i < mat1.size(); i++)
     {
@@ -61,10 +61,10 @@ std::vector<std::vector<int>> MatMul(std::vector<std::vector<int>> mat1, std::ve
     return res;
 }
 
-std::vector<std::vector<int>> MatPow(std::vector<std::vector<int>> mat, int exp){
-    std::vector<std::vector<int>> res;
+std::vector<std::vector<long long>> MatPow(std::vector<std::vector<long long>> mat, int exp){
+    std::vector<std::vector<long long>> res;
     bool set = false;
-    std::vector<std::vector<int>> curr = mat;
+    std::vector<std::vector<long long>> curr = mat;
     int i = 1;
     while (exp != 0)
     {
@@ -151,6 +151,16 @@ Graph SubGraph(const Graph * const g, std::vector<int> mask, int * neighbours = 
     return s;
 }
 
+std::vector<std::vector<long long>> UpcastMatrix(std::vector<std::vector<int>> mat) {
+    std::vector<std::vector<long long>> res;
+    for (size_t i = 0; i < mat.size(); i++)
+    {
+        std::vector<long long> lsub(mat[i].begin(), mat[i].end());
+        res.push_back(lsub);
+    }
+    return res;
+} 
+
 int MaxCycle(const Graph * const g, unsigned long long * no_cycles = NULL) {
     // based on https://arxiv.org/pdf/1612.05531
     // NOTE:: this returns the number of **directed** cycles. so a singular cycle in an undirected graph will count for two
@@ -177,7 +187,7 @@ int MaxCycle(const Graph * const g, unsigned long long * no_cycles = NULL) {
                 if (! isWeaklyConnected(&sub.adjacencyMatrix)) {
                     continue;
                 }
-                sub_gamma = binom(neigh, i - sub.vertices) * ( sub.vertices % 2 == 1 ? -1 : 1 ) * MatTrace( MatPow(sub.adjacencyMatrix, i) );
+                sub_gamma = binom(neigh, i - sub.vertices) * ( sub.vertices % 2 == 1 ? -1 : 1 ) * MatTrace( MatPow( UpcastMatrix(sub.adjacencyMatrix), i) );
                 gamma += sub_gamma;
             }
             

@@ -21,6 +21,6 @@ Graph InitGraph(int size);
 Graph CloneGraph(const Graph * g);
 std::vector<std::vector<int>> FlattenMatrix(std::vector<std::vector<int>> mat);
 std::vector<std::vector<int>> comb(int n, int k);
-int binom(int n, int k);
+unsigned long long binom(int n, int k);
 
 #endif //COMMON_HPP

@@ -128,7 +128,7 @@ std::vector<std::vector<int>> comb(int n, int k) {
     return res;
 }
 
-int binom(int n, int k) {
+unsigned long long binom(int n, int k) {
     if (n < 0 || k < 0 || k > n){
         return 0;
     }
