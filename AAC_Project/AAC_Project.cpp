@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <cassert>
+#include <chrono>
 
 using namespace std;
 
@@ -91,19 +92,23 @@ void printGraph(const Graph& graph)
     }
 }
 
-bool hasHamiltonianCycleUtil(const Graph& graph, int pos, vector<bool>& visited, int count)
+bool hasHamiltonianCycleUtil(const Graph& graph, int pos, vector<bool>& visited, int count, bool isDirected)
 {
     int n = graph.vertices;
     if (count == n)
     {
-        return graph.adjacencyMatrix[pos][0] == 1;
+        if (isDirected)
+        {
+            return graph.adjacencyMatrix[pos][0] > 0;
+        }
+        return (graph.adjacencyMatrix[pos][0] > 0 || graph.adjacencyMatrix[0][pos] > 0);
     }
     for (int v = 0; v < n; ++v)
     {
         if (graph.adjacencyMatrix[pos][v] && !visited[v])
         {
             visited[v] = true;
-            if (hasHamiltonianCycleUtil(graph, v, visited, count + 1))
+            if (hasHamiltonianCycleUtil(graph, v, visited, count + 1, isDirected))
             {
                 return true;
             }
@@ -113,12 +118,12 @@ bool hasHamiltonianCycleUtil(const Graph& graph, int pos, vector<bool>& visited,
     return false;
 }
 
-bool hasHamiltonianCycle(const Graph& graph)
+bool hasHamiltonianCycle(const Graph& graph, bool isDirected)
 {
     int n = graph.vertices;
     vector<bool> visited(n, false);
     visited[0] = true;
-    return hasHamiltonianCycleUtil(graph, 0, visited, 1);
+    return hasHamiltonianCycleUtil(graph, 0, visited, 1, isDirected);
 }
 
 int minimalExtension(Graph graph, bool isDirected)
@@ -138,7 +143,7 @@ int minimalExtension(Graph graph, bool isDirected)
         }
     }
 
-    if (hasHamiltonianCycle(graph))
+    if (hasHamiltonianCycle(graph, isDirected))
     {
         return 0;
     }
@@ -157,14 +162,14 @@ int minimalExtension(Graph graph, bool isDirected)
                 {
                     auto edge = missingEdges[i];
                     graph.adjacencyMatrix[edge.first][edge.second] = 1;
-                    if (isDirected)
+                    if (!isDirected)
                     {
                         graph.adjacencyMatrix[edge.second][edge.first] = 1;
                     }
                 }
             }
 
-            if (hasHamiltonianCycle(graph))
+            if (hasHamiltonianCycle(graph, isDirected))
             {
                 return k;
             }
@@ -175,7 +180,7 @@ int minimalExtension(Graph graph, bool isDirected)
                 {
                     auto edge = missingEdges[i];
                     graph.adjacencyMatrix[edge.first][edge.second] = 0;
-                    if (isDirected)
+                    if (!isDirected)
                     {
                         graph.adjacencyMatrix[edge.second][edge.first] = 0;
                     }
@@ -201,31 +206,117 @@ bool checkIfDirected(const Graph& graph)
     return false;
 }
 
+void generateRandomGraph(Graph& graph, int vertices, int density)
+{
+    graph.vertices = vertices;
+    graph.adjacencyMatrix = vector<vector<int>>(vertices, vector<int>(vertices, 0));
+
+    srand(time(0));
+
+    for (int i = 0; i < vertices; ++i)
+    {
+        for (int j = i + 1; j < vertices; ++j)
+        {
+            if ((rand() % 100) < density)
+            {
+                graph.adjacencyMatrix[i][j] = 1;
+                graph.adjacencyMatrix[j][i] = 1;
+            }
+        }
+    }
+}
+
+void generateSparseGraph(Graph& graph, int vertices)
+{
+    graph.vertices = vertices;
+    graph.adjacencyMatrix = vector<vector<int>>(vertices, vector<int>(vertices, 0));
+
+    for (int i = 0; i < vertices - 1; ++i)
+    {
+        graph.adjacencyMatrix[i][i + 1] = 1;
+        graph.adjacencyMatrix[i + 1][i] = 1;
+    }
+}
+
+void generateDenseGraph(Graph& graph, int vertices)
+{
+    graph.vertices = vertices;
+    graph.adjacencyMatrix = vector<vector<int>>(vertices, vector<int>(vertices, 1));
+
+    for (int i = 0; i < vertices; ++i)
+    {
+        graph.adjacencyMatrix[i][i] = 0;
+    }
+}
+
+void generateAlmostCompleteGraph(Graph& graph, int vertices)
+{
+    graph.vertices = vertices;
+    graph.adjacencyMatrix = vector<vector<int>>(vertices, vector<int>(vertices, 0));
+    graph.adjacencyMatrix[0][1] = 1;
+}
+
+void runTests()
+{
+    ofstream results("test_results.txt");
+    if (!results.is_open())
+    {
+        cerr << "Error: Could not open results file." << endl;
+        return;
+    }
+
+    for (int n = 3; n <= 7; ++n)
+    {
+        results << "Testing for n = " << n << " vertices:\n";
+        vector<Graph> testGraphs(4);
+
+        // Generate test cases
+        generateSparseGraph(testGraphs[0], n);
+        generateDenseGraph(testGraphs[1], n);
+        generateRandomGraph(testGraphs[2], n, 50); // 50% density
+        generateAlmostCompleteGraph(testGraphs[3], n);
+
+        //string graphTypes[] = {"Sparse", "Dense", "Random"};
+        string graphTypes[] = {"Sparse", "Dense", "Random", "Sparse Random"};
+
+        for (int i = 0; i < 4; ++i)
+        {
+            auto start = chrono::high_resolution_clock::now();
+            int result = minimalExtension(testGraphs[i], checkIfDirected(testGraphs[i]));
+            auto end = chrono::high_resolution_clock::now();
+            chrono::duration<double> elapsed = end - start;
+
+            results << graphTypes[i] << " graph: Minimal extensions = " << result
+                << ", Time taken = " << elapsed.count() << " seconds.\n";
+        }
+
+        results << "\n";
+    }
+
+    results.close();
+}
+
 int main()
 {
-    string filename;
-    cout << "Data file path: ";
-    cin >> filename;
-
-    vector<Graph> graphs = parseGraphs(filename);
-    cout << "Parsed " << graphs.size() << " graphs." << endl;
-
-    for (size_t i = 0; i < graphs.size(); ++i)
-    {
-        cout << "\nGraph " << i + 1 << ":" << endl;
-        printGraph(graphs[i]);
-    }
-
-    for (size_t i = 0; i < graphs.size(); ++i)
-    {
-        if (hasHamiltonianCycle(graphs[i]))
-        {
-            cout << 0 << endl;
-        }
-        else
-        {
-            cout << minimalExtension(graphs[i], checkIfDirected(graphs[i])) << endl;
-        }
-    }
+    runTests();
+    cout << "Tests completed. Results saved to 'test_results.txt'." << endl;
     return 0;
+    // string filename;
+    // cout << "Data file path: ";
+    // cin >> filename;
+    //
+    // vector<Graph> graphs = parseGraphs(filename);
+    // cout << "Parsed " << graphs.size() << " graphs." << endl;
+    //
+    // for (size_t i = 0; i < graphs.size(); ++i)
+    // {
+    //     cout << "\nGraph " << i + 1 << ":" << endl;
+    //     printGraph(graphs[i]);
+    // }
+    //
+    // for (size_t i = 0; i < graphs.size(); ++i)
+    // {
+    //     cout << minimalExtension(graphs[i], checkIfDirected(graphs[i])) << endl;
+    // }
+    // return 0;
 }
