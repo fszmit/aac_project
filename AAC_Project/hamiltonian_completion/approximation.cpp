@@ -407,7 +407,8 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
         //         start = (start + 1) % n;
         //     }
         // }
-        std::cout << "After improving";
+         std::cout << "After improving: "
+                  << edges_to_add_in_cycle(cycle, weights) << std::endl;
         print_cycle(new_cycle);
         cycle = new_cycle;
     }
