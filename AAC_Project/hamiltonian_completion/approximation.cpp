@@ -383,10 +383,10 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
             new_cycle.insert(new_cycle.end(), cycle.begin() + 1, cycle.begin() + first_edge.start);
         }
 
+  
         // else if (third_segment.start == 0 && first_edge.start == 0) {
         //     new_cycle.insert(new_cycle.end(), cycle.begin(), cycle.begin() + first_edge.start);
         // }
-
 
         // if (third_segment.reverse) {
         //     std::reverse(third_segment_vector.begin(), third_segment_vector.end());
