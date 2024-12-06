@@ -93,10 +93,10 @@ int edges_to_add_in_cycle(const std::vector<int> cycle,
 }
 
 void print_cycle(const std::vector<int> cycle) { 
-    for (int i : cycle) {
-        std::cout << i << " -> ";
-    }
-    std::cout << std::endl;
+    //for (int i : cycle) {
+    //    std::cout << i << " -> ";
+    //}
+    //std::cout << std::endl;
 }
 
 // 3-Opt move without path reversal
@@ -269,7 +269,7 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
 
 
                             
-                            std::cout << " prev " << cycle[i] << "->" << cycle[i_next] << " "
+                            /*std::cout << " prev " << cycle[i] << "->" << cycle[i_next] << " "
                                       << cycle[j] << "->" << cycle[j_next] << " " << cycle[k] << "->" << cycle[k_next]
                                                     << std::endl;
                              std::cout << "moves " << cycle[first_edge.start] << "->"
@@ -277,12 +277,12 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
                                       << cycle[second_edge.start] << "->"
                                       << cycle[second_edge.end] << " "
                                       << cycle[third_edge.start] << "->" << cycle[third_edge.end]
-                                << std::endl;
+                                << std::endl;*/
 
                             improved = true;
-                             std::cout << "improvement " << improved << " gain " << gain << " nw "
+                            /* std::cout << "improvement " << improved << " gain " << gain << " nw "
                                        << new_weight << " old " << old_weight << std::endl;
-                                 std::cout << "";
+                                 std::cout << "";*/
                         }
                     }
                 }
@@ -373,15 +373,30 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
         int third_segment_min = third_segment.start;
         //int third_segment_max = !third_segment.reverse ? third_segment.end : third_segment.start;
 
-        std::vector<int> third_segment_vector(cycle.begin() + third_segment_min + 1,
-                                               cycle.end());
+         std::vector<int> third_segment_vector;
+        if (third_segment.end != third_segment.start + 1) {
+            third_segment_vector  = std::vector<int>(
+                cycle.begin() + third_segment_min + 1,
+                                                  cycle.end());
+        }
+        
+        if (third_segment.start > 0) {
+            new_cycle.insert(new_cycle.end(), cycle.begin() + third_segment.start + 1, cycle.end());
+        }
+
+        if (third_segment.start != 0) {
+            new_cycle.insert(new_cycle.end(), cycle.begin(), cycle.begin() + first_edge.start); 
+        } else if (third_segment.start == 0 && first_edge.start > 0) {
+            new_cycle.insert(new_cycle.end(), cycle.begin() + 1, cycle.begin() + first_edge.start); 
+        }
 
         //if (third_segment.reverse) {
         //    std::reverse(third_segment_vector.begin(), third_segment_vector.end());
         //}
 
-        new_cycle.insert(new_cycle.end(), third_segment_vector.begin(),
-                         third_segment_vector.end());
+        //new_cycle.insert(new_cycle.end(), third_segment_vector.begin(),
+        //                 third_segment_vector.end());
+
         //if (i_next_new == best_j || j_next_new == best_j) {
         //    std::reverse(new_cycle.begin() + best_i_next + 1, new_cycle.begin() + best_j);
         //}
@@ -445,8 +460,8 @@ int get_highest_degree_vertex(const std::vector<std::vector<int>>& graph) {
 }
 
 int get_consistent_start_vertex(int n) {
-    return 4;
-   /* static int call_count = 0;
+    return 7;
+   static int call_count = 0;
     static int last_vertex = -1;
     call_count++;
 
@@ -458,7 +473,7 @@ int get_consistent_start_vertex(int n) {
     std::cout << std::endl;
 
     last_vertex = call_count % n;
-    return last_vertex;*/
+    return last_vertex;
 }
 
 

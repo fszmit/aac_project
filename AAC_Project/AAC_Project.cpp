@@ -99,7 +99,7 @@ int main() {
         vector<int> all_completions;
         vector<long long> all_durations;
         
-        for (int j = 0; j < 1; j++) {
+        for (int j = 0; j < 50; j++) {
             auto iteration_start = std::chrono::high_resolution_clock::now();
             
             int c = hamiltonian_completion_approximation(graphs[i].adjacencyMatrix);
