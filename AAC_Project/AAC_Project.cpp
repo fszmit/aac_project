@@ -1,10 +1,10 @@
+#include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <chrono>
-#include <algorithm>
 
 #include "hamiltonian_completion/approximation.h"
 
@@ -98,36 +98,38 @@ int main() {
         double total_completion = 0;
         vector<int> all_completions;
         vector<long long> all_durations;
-        
+
         for (int j = 0; j < 50; j++) {
             auto iteration_start = std::chrono::high_resolution_clock::now();
-            
+
             int c = hamiltonian_completion_approximation(graphs[i].adjacencyMatrix);
-            
+
             auto iteration_end = std::chrono::high_resolution_clock::now();
-            auto iteration_duration = std::chrono::duration_cast<std::chrono::milliseconds>(iteration_end - iteration_start);
-            
+            auto iteration_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                iteration_end - iteration_start);
+
             total_completion += c;
             all_completions.push_back(c);
             all_durations.push_back(iteration_duration.count());
-            
-            cout << "Iteration " << j + 1 << ": completion = " << c 
+
+            cout << "Iteration " << j + 1 << ": completion = " << c
                  << ", time = " << iteration_duration.count() << " ms" << endl;
         }
 
         auto total_end_time = std::chrono::high_resolution_clock::now();
-        auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(total_end_time - total_start_time);
-        
+        auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+            total_end_time - total_start_time);
+
         // Calculate min and max values
         int min_completion = *std::min_element(all_completions.begin(), all_completions.end());
         int max_completion = *std::max_element(all_completions.begin(), all_completions.end());
         long long min_time = *std::min_element(all_durations.begin(), all_durations.end());
         long long max_time = *std::max_element(all_durations.begin(), all_durations.end());
-        
+
         cout << "\nSummary:" << endl;
-        cout << "Completion size - Min: " << min_completion << ", Max: " << max_completion 
+        cout << "Completion size - Min: " << min_completion << ", Max: " << max_completion
              << ", Avg: " << (total_completion / 50.0) << endl;
-        cout << "Time (ms) - Min: " << min_time << ", Max: " << max_time 
+        cout << "Time (ms) - Min: " << min_time << ", Max: " << max_time
              << ", Avg: " << (total_duration.count() / 50.0) << endl;
         cout << "Total execution time: " << total_duration.count() << " ms" << endl;
     }
