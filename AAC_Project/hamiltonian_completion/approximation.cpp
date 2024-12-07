@@ -102,33 +102,19 @@ void print_cycle(const std::vector<int> cycle) {
 
 bool contains(const std::set<int> s, int x) { return s.find(x) != s.end(); }
 
-// 3-Opt move without path reversal
+// TODO pass is_symmetric
 bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>& weights,
-                    bool is_symmetric = true) {
+                    bool is_symmetric = false) {
     int n = cycle.size();
     bool improved = false;
     int best_gain = 0;
 
-    //// Store the best move
-    // int best_i = 0, best_j = 0, best_k = 0;
-
-    // int i_new = -1;
-    // int i_next_new = -1;
-    // int j_new = -1;
-    // int j_next_new = -1;
-    // int k_new = -1;
-    // int k_next_new = -1;
-
     std::vector<edge> best_edges;
     std::vector<cycle_segment> best_segments;
 
-    // Try all possible combinations of three edges
-    // TODO im not sure it this is correct
     for (int i = 0; i < n - 2; i++) {
-        for (int j = i + 1; j < n - 1; j++) {  // todo revert to j = i + 1
-            for (int k = j + 1; k < n; k++) {  // todo revert to k = j + 1
-                // std::cout << "combination" << std::endl;
-
+        for (int j = i + 1; j < n - 1; j++) {
+            for (int k = j + 1; k < n; k++) {
                 int i_next = (i + 1) % n;
                 int j_next = (j + 1) % n;
                 int k_next = (k + 1) % n;
@@ -167,17 +153,9 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
                 }
 
                 for (int f = 0; f < selectable_vertices.size(); f++) {
-                    // int first_added_edge_start = i;
-                    // int first_added_edge_end = selectable_vertices[f];
                     edge first_edge;
                     first_edge.start = i;
                     first_edge.end = selectable_vertices[f];
-
-                    // int second_added_edge_start = -1;
-                    // int second_added_edge_end = -1;
-
-                    // int third_added_edge_start = -1;
-                    // int third_added_edge_end = k_next;
 
                     cycle_segment first_segment = get_segment(first_edge.end);
 
@@ -213,26 +191,9 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
                         third_segment.start = k_next;
                         third_segment.end = i;
 
-                        // if (second_added_edge_end == i_next) {
-                        //     third_added_edge_start = j;
-                        // } else if (second_added_edge_end == j) {
-                        //     third_added_edge_start = i_next;
-                        // } else if (second_added_edge_end == j_next) {
-                        //     third_added_edge_start = k;
-                        // } else if (second_added_edge_end == k) {
-                        //     third_added_edge_start = j_next;
-                        // }
-
                         int new_weight = weights[cycle[first_edge.start]][cycle[first_edge.end]] +
                                          weights[cycle[second_edge.start]][cycle[second_edge.end]] +
                                          weights[cycle[third_edge.start]][cycle[third_edge.end]];
-
-                        // std::cout << char(first_added_edge_start + int('a')) << "->"
-                        //           << char(first_added_edge_end + int('a')) << " "
-                        //           << char(second_added_edge_start + int('a')) << "->"
-                        //           << char(second_added_edge_end + int('a')) << " "
-                        //           << char(third_added_edge_start + int('a')) << "->"
-                        //           << char(third_added_edge_end + int('a')) << std::endl;
 
                         int gain = old_weight - new_weight;
                         if (gain > best_gain) {
@@ -241,44 +202,29 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
                             best_edges = {first_edge, second_edge, third_edge};
                             best_segments = {first_segment, second_segment, third_segment};
 
-                            std::cout << " prev " << cycle[i] << "->" << cycle[i_next] << " "
-                                      << cycle[j] << "->" << cycle[j_next] << " " << cycle[k]
-                                      << "->" << cycle[k_next] << std::endl;
-                            std::cout << "moves " << cycle[first_edge.start] << "->"
-                                      << cycle[first_edge.end] << " " << cycle[second_edge.start]
-                                      << "->" << cycle[second_edge.end] << " "
-                                      << cycle[third_edge.start] << "->" << cycle[third_edge.end]
-                                      << std::endl;
+                            // std::cout << " prev " << cycle[i] << "->" << cycle[i_next] << " "
+                            //           << cycle[j] << "->" << cycle[j_next] << " " << cycle[k]
+                            //           << "->" << cycle[k_next] << std::endl;
+                            // std::cout << "moves " << cycle[first_edge.start] << "->"
+                            //           << cycle[first_edge.end] << " " << cycle[second_edge.start]
+                            //           << "->" << cycle[second_edge.end] << " "
+                            //           << cycle[third_edge.start] << "->" << cycle[third_edge.end]
+                            //           << std::endl;
 
                             improved = true;
-                            std::cout << "improvement " << improved << " gain " << gain << " new "
-                                      << new_weight << " old " << old_weight << std::endl;
-                            std::cout << "";
+                            // std::cout << "improvement " << improved << " gain " << gain << " new
+                            // "
+                            //           << new_weight << " old " << old_weight << std::endl;
+                            // std::cout << "";
                         }
                     }
                 }
-
-                // Current edges
-                // Try all permutations of the three segments
-                // std::vector<int> segments = {j, k, i};
-                // int perm_index = 0;
-                // do {
-                //    // std::cout << "permutation" << std::endl;
-
-                //              << std::endl;
-
-                //    perm_index++;
-                //} while (std::next_permutation(segments.begin(), segments.end()));
-                // break;
             }
         }
     }
 
     // Apply the best move if found
     if (improved) {
-        std::cout << "Before improving: " << edges_to_add_in_cycle(cycle, weights) << std::endl;
-        print_cycle(cycle);
-
         edge first_edge = best_edges[0];  // i.....x
         edge second_edge = best_edges[1];
         edge third_edge = best_edges[2];  // z...k_next
@@ -316,15 +262,11 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
         if (!contains(already_added, second_edge.start)) {
             new_cycle.push_back(cycle[second_edge.start]);
             already_added.insert(second_edge.start);
-        } else {
-            std::cout << "already added " << cycle[second_edge.start] << std::endl;
         }
 
         if (!contains(already_added, second_edge.end)) {
             new_cycle.push_back(cycle[second_edge.end]);
             already_added.insert(second_edge.end);
-        } else {
-            std::cout << "already added " << cycle[second_edge.end] << std::endl;
         }
 
         if (second_segment.start != second_segment.end) {
@@ -347,15 +289,11 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
         if (!contains(already_added, third_edge.start)) {
             new_cycle.push_back(cycle[third_edge.start]);
             already_added.insert(third_edge.start);
-        } else {
-            std::cout << "already added " << cycle[third_edge.start] << std::endl;
         }
 
         if (!contains(already_added, third_edge.end)) {
             new_cycle.push_back(cycle[third_edge.end]);
             already_added.insert(third_edge.end);
-        } else {
-            std::cout << "already added " << cycle[third_edge.end] << std::endl;
         }
 
         int third_segment_min = third_segment.start;
@@ -409,34 +347,27 @@ int get_highest_degree_vertex(const std::vector<std::vector<int>>& graph) {
 }
 
 int get_consistent_start_vertex(int n) {
-    // return 24;
     static int call_count = 0;
     static int last_vertex = -1;
     call_count++;
 
-    std::cout << "Start vertex selection call #" << call_count;
-
-    if (last_vertex != -1) {
-        std::cout << " (previous: " << last_vertex << ")";
-    }
-    std::cout << std::endl;
+    std::cout << "Start vertex selection call #" << call_count << std::endl;
 
     last_vertex = call_count % n;
     return last_vertex;
 }
 
 int hamiltonian_completion_approximation(const std::vector<std::vector<int>>& graph) {
-    //   to complete weighted graph
+    // transform to complete weighted graph
     WeightedGraph weighted_graph = transform_to_complete_weighted_graph(graph);
     int n = weighted_graph.vertices;
 
     // Get vertex with highest degree as start vertex
-    // int start_vertex = get_highest_degree_vertex(graph);
+    int start_vertex = get_highest_degree_vertex(graph);
 
     // int start_vertex = get_random_start_vertex(weighted_graph.vertices);
-
     // Use consistent vertex selection for debugging
-    int start_vertex = get_consistent_start_vertex(n);
+    // int start_vertex = get_consistent_start_vertex(n);
 
     // Get initial cycle using nearest neighbor
     std::vector<int> cycle = nearest_neighbor(weighted_graph.weightMatrix, start_vertex);
@@ -446,33 +377,15 @@ int hamiltonian_completion_approximation(const std::vector<std::vector<int>>& gr
     bool improved;
     int iters = 0;
 
-    // this makes it iterated three_opt which is slower
+    // this makes it iterated three_opt which has higher time complexity, but better accuracy
     do {
         improved = three_opt_move(cycle, weighted_graph.weightMatrix);
         iters++;
-        //  std::cout << iters << std::endl;
-
-        // std::cout << edges_to_add_in_cycle(cycle, weighted_graph.weightMatrix) << std::endl;
-        // std::cout << "After improving: "
-        //           << edges_to_add_in_cycle(cycle, weighted_graph.weightMatrix) << std::endl;
-        // print_cycle(cycle);
     } while (improved && iters < 10 * n);
 
     int result = edges_to_add_in_cycle(cycle, weighted_graph.weightMatrix);
     std::cout << "length of the cycle " << cycle.size() << std::endl;
     print_cycle(cycle);
 
-    // Count the number of edges that need to be added (edges with weight 1 in the cycle)
     return result;
-    // int edges_to_add = 0;
-    // for (size_t i = 0; i < cycle.size(); i++) {
-    //     int from = cycle[i];
-    //     int to = cycle[(i + 1) % cycle.size()];
-    //     if (weighted_graph.weightMatrix[from][to] == 1) {  // If edge doesn't exist in original
-    //     graph
-    //         edges_to_add++;
-    //     }
-    // }
-
-    // return edges_to_add;
 }
