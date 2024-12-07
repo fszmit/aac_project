@@ -28,23 +28,27 @@ WeightedGraph transform_to_complete_weighted_graph(
     return result;
 }
 
+void print_matrix(const std::vector<std::vector<int>> matrix) {
+    for (const auto& row : matrix) {
+        for (int value : row) {
+            std::cout << value << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
 void print_weighted_graph(const WeightedGraph& graph) {
     std::cout << "Number of vertices: " << graph.vertices << std::endl;
     std::cout << "Weight Matrix:" << std::endl;
 
-    for (const auto& row : graph.weightMatrix) {
-        for (int weight : row) {
-            std::cout << weight << " ";
-        }
-        std::cout << std::endl;
-    }
+    print_matrix(graph.weightMatrix);
 }
 
 // Helper function to calculate cycle length
 int calculate_cycle_length(const std::vector<int>& cycle,
                            const std::vector<std::vector<int>>& weights) {
     int length = 0;
-    for (size_t i = 0; i < cycle.size(); i++) {
+    for (int i = 0; i < cycle.size(); i++) {
         length += weights[cycle[i]][cycle[(i + 1) % cycle.size()]];
     }
     return length;
@@ -81,15 +85,28 @@ std::vector<int> nearest_neighbor(const std::vector<std::vector<int>>& weights, 
 }
 
 int edges_to_add_in_cycle(const std::vector<int> cycle,
-                          const std::vector<std::vector<int>>& weights) {
+                          const std::vector<std::vector<int>>& weights, int n, bool print = false,
+                          bool is_symmetric = false) {
+    std::vector<std::vector<int>> matrix;
+
+    if (print) {
+        std::cout << "Edges in the approximately minimal set of edges to add to make the graph "
+                     "Hamiltonian"
+                  << std::endl;
+    }
+
     int edges_to_add = 0;
-    for (size_t i = 0; i < cycle.size(); i++) {
+    for (int i = 0; i < cycle.size(); i++) {
         int from = cycle[i];
         int to = cycle[(i + 1) % cycle.size()];
         if (weights[from][to] == 1) {  // If edge doesn't exist in original graph
             edges_to_add++;
+            if (print) {
+                std::cout << from << "->" << to << std::endl;
+            }
         }
     }
+
     return edges_to_add;
 }
 
@@ -225,9 +242,9 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
 
     // Apply the best move if found
     if (improved) {
-        edge first_edge = best_edges[0];  // i.....x
+        edge first_edge = best_edges[0];
         edge second_edge = best_edges[1];
-        edge third_edge = best_edges[2];  // z...k_next
+        edge third_edge = best_edges[2];
 
         cycle_segment first_segment = best_segments[0];
         cycle_segment second_segment = best_segments[1];
@@ -310,8 +327,9 @@ bool three_opt_move(std::vector<int>& cycle, const std::vector<std::vector<int>>
             new_cycle.insert(new_cycle.end(), cycle.begin(), cycle.begin() + 1);
         }
 
-        std::cout << "After improving: " << edges_to_add_in_cycle(new_cycle, weights) << std::endl;
-        print_cycle(new_cycle);
+        // std::cout << "After improving: " << edges_to_add_in_cycle(new_cycle, weights) <<
+        // std::endl;
+        // print_cycle(new_cycle);
         cycle = new_cycle;
     }
 
@@ -358,34 +376,34 @@ int get_consistent_start_vertex(int n) {
 }
 
 int hamiltonian_completion_approximation(const std::vector<std::vector<int>>& graph) {
-    // transform to complete weighted graph
+    // Transform to complete weighted graph
     WeightedGraph weighted_graph = transform_to_complete_weighted_graph(graph);
     int n = weighted_graph.vertices;
 
     // Get vertex with highest degree as start vertex
     int start_vertex = get_highest_degree_vertex(graph);
 
-    // int start_vertex = get_random_start_vertex(weighted_graph.vertices);
-    // Use consistent vertex selection for debugging
+    // Consistent vertex selection for debugging
     // int start_vertex = get_consistent_start_vertex(n);
 
     // Get initial cycle using nearest neighbor
     std::vector<int> cycle = nearest_neighbor(weighted_graph.weightMatrix, start_vertex);
-    std::cout << edges_to_add_in_cycle(cycle, weighted_graph.weightMatrix) << std::endl;
-
-    // Apply 3-Opt until no improvement is found
+    // std::cout << edges_to_add_in_cycle(cycle, weighted_graph.weightMatrix) << std::endl;
     bool improved;
     int iters = 0;
 
-    // this makes it iterated three_opt which has higher time complexity, but better accuracy
-    do {
+    // 3-Opt heuritic until no improvement is found
+    do {  // this makes it iterated three_opt which has higher time complexity, but better accuracy
         improved = three_opt_move(cycle, weighted_graph.weightMatrix);
         iters++;
-    } while (improved && iters < 10 * n);
+    } while (improved && iters < 10 * n);  // limit of iterations as a afilsafe
 
-    int result = edges_to_add_in_cycle(cycle, weighted_graph.weightMatrix);
-    std::cout << "length of the cycle " << cycle.size() << std::endl;
-    print_cycle(cycle);
+    int result = edges_to_add_in_cycle(cycle, weighted_graph.weightMatrix, n, true);
+    std::cout << "Approximately minimal number of edges to add to make a graph Hamiltonian: "
+              << result << std::endl;
+
+    // std::cout << "length of the cycle " << cycle.size() << std::endl;
+    // print_cycle(cycle);
 
     return result;
 }
